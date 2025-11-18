@@ -16,17 +16,17 @@ dependencies:
 
   # UI & Navigation
   go_router: ^12.0.0
-  provider: ^6.4.0
+  provider: ^6.0.0
   flutter_hooks: ^0.20.0
 
   # Database & Storage
-  drift: ^2.14.0
+  drift: ^2.13.0
   sqlite3_flutter_libs: ^0.5.0
-  path_provider: ^2.1.0
-  shared_preferences: ^2.2.0
+  path_provider: ^2.0.0
+  shared_preferences: ^2.0.0
 
   # Google Sign-In & Calendar
-  google_sign_in: ^6.2.0
+  google_sign_in: ^6.1.0
   googleapis: ^11.0.0
   googleapis_auth: ^1.4.0
 
@@ -36,21 +36,21 @@ dependencies:
   # Note: 'dio' not used, removed to reduce dependencies
 
   # Background Services
-  workmanager: ^0.5.1
-  app_links: ^3.4.5
+  workmanager: ^0.5.0
+  app_links: ^3.4.0
 
   # Notifications
   flutter_local_notifications: ^16.0.0
   timezone: ^0.9.0
 
   # Device & System
-  device_info_plus: ^10.0.0
+  device_info_plus: ^9.0.0
   package_info_plus: ^5.0.0
   usage_stats: ^1.1.0  # For app usage statistics
 
   # Security & Biometrics
-  local_auth: ^2.3.0
-  flutter_secure_storage: ^9.1.0
+  local_auth: ^2.1.0
+  flutter_secure_storage: ^9.0.0
 
   # Utils
   intl: ^0.19.0
