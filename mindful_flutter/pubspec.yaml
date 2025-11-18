@@ -27,7 +27,7 @@ dependencies:
 
   # Google Sign-In & Calendar
   google_sign_in: ^6.2.0
-  googleapis: ^12.3.0  # Google Calendar API
+  googleapis: ^12.1.0
   googleapis_auth: ^1.4.0
 
   # OAuth & HTTP
