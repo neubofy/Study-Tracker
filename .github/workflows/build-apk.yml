@@ -1,0 +1,111 @@
+name: Build Release APK
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: gradle
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.13.0'
+          cache: true
+
+      - name: Get Flutter dependencies
+        working-directory: ./mindful_flutter
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: ./mindful_flutter
+        run: flutter build apk --release
+
+      - name: Move APK to outputs
+        run: |
+          mkdir -p build/app/outputs/flutter-apk/
+          cp mindful_flutter/build/app/outputs/flutter-apk/*.apk build/app/outputs/flutter-apk/ || true
+
+      - name: Generate release notes
+        run: |
+          echo "# Neubofy Productive Release" > RELEASE_NOTES.md
+          echo "## Version ${{ github.run_id }}" >> RELEASE_NOTES.md
+          echo "**Build Date**: $(date +'%Y-%m-%d %H:%M:%S')" >> RELEASE_NOTES.md
+          echo "**Commit**: ${{ github.sha }}" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "### Build Information" >> RELEASE_NOTES.md
+          echo "- Branch: ${{ github.ref_name }}" >> RELEASE_NOTES.md
+          echo "- Actor: ${{ github.actor }}" >> RELEASE_NOTES.md
+          echo "- Run ID: ${{ github.run_id }}" >> RELEASE_NOTES.md
+          echo "- Run ID: ${{ github.run_id }}" >> RELEASE_NOTES.md
+
+      - name: Upload APK to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: neubofy-productive-apk
+          path: mindful_flutter/build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
+
+      - name: Create Release (on main branch push)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: mindful_flutter/build/app/outputs/flutter-apk/app-release.apk
+          tag_name: v${{ github.run_number }}
+          name: Neubofy Productive v${{ github.run_number }}
+          body: |
+            ## Release Build v${{ github.run_number }}
+            
+            **Build Information:**
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+            
+            **Download:** app-release.apk
+            
+            **Installation:**
+            ```bash
+            adb install app-release.apk
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ APK built successfully! Download from [Actions artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+            })
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ APK build failed. Check [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+            })
