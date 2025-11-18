@@ -38,7 +38,6 @@ dependencies:
   # Background Services
   workmanager: ^0.5.1
   app_links: ^3.6.0
-  notification_central: ^1.0.0
 
   # Notifications
   flutter_local_notifications: ^16.0.0
