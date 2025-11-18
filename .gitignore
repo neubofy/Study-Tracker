@@ -1,0 +1,65 @@
+# Secrets and credentials
+*.env
+.env
+.env.local
+.env.*.local
+
+# OAuth and API keys
+google_client_secret.json
+credentials.json
+oauth_secrets.txt
+
+# Private files
+private/
+secrets/
+
+# Build outputs
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dependencies
+pubspec.lock
+.pub-cache/
+
+# Generated files
+*.g.dart
+*.gr.dart
+*.config.dart
+
+# Android
+android/.gradle
+android/local.properties
+android/build/
+*.apk
+*.aab
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Certificates and keys
+*.jks
+*.keystore
+*.mobileprovision
+*.cer
+*.p12
+*.pem
+
+# Coverage
+coverage/
+
+# Logs
+*.log

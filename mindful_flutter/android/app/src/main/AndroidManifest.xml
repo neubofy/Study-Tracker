@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- ============ ESSENTIAL PERMISSIONS ============ -->
+    <!-- Calendar Access - for Google Calendar integration -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    
+    <!-- Internet - for API calls and OAuth -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Notifications - for focus mode alerts -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- ============ OPTIONAL PERMISSIONS (Advanced Features) ============ -->
+    <!-- Usage Stats - for screen time tracking -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+    
+    <!-- Do Not Disturb - for focus mode -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    
+    <!-- Biometric - for app lock -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    
+    <!-- ============ BACKGROUND SERVICE PERMISSIONS ============ -->
+    <!-- Foreground Service - for calendar monitoring -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    
+    <!-- Background work scheduling -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:usesCleartextTraffic="false"
+        android:requestLegacyExternalStorage="false">
+        
+        <!-- Main Activity is defined by Flutter -->
+        
+        <!-- ============ BACKGROUND SERVICES ============ -->
+        <!-- Foreground Service for calendar monitoring -->
+        <service
+            android:name=".services.CalendarMonitoringService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"
+            android:description="@string/calendar_monitoring_service_description" />
+        
+        <!-- WorkManager for periodic calendar sync -->
+        <provider
+            android:name="androidx.work.impl.WorkManagerInitializer"
+            android:authorities="${applicationId}.workmanager-init"
+            android:enabled="false"
+            android:exported="false" />
+    </application>
+</manifest>
+
