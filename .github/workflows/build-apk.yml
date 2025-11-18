@@ -7,9 +7,14 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  FLUTTER_VERSION: '3.13.0'
+  JAVA_VERSION: '17'
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -18,93 +23,137 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.13.0'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+          channel: 'stable'
+
+      - name: Get Flutter version info
+        run: flutter --version
 
       - name: Get Flutter dependencies
         working-directory: ./mindful_flutter
-        run: flutter pub get
+        run: |
+          flutter pub get
+          flutter pub upgrade --dry-run
 
-      - name: Build APK
+      - name: Analyze code
         working-directory: ./mindful_flutter
+        continue-on-error: true
+        run: flutter analyze
+
+      - name: Format check
+        working-directory: ./mindful_flutter
+        continue-on-error: true
+        run: dart format --set-exit-if-changed .
+
+      - name: Build APK (Debug for testing)
+        working-directory: ./mindful_flutter
+        run: flutter build apk --debug
+
+      - name: Build APK (Release)
+        working-directory: ./mindful_flutter
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: flutter build apk --release
 
-      - name: Move APK to outputs
+      - name: List build outputs
+        if: always()
         run: |
-          mkdir -p build/app/outputs/flutter-apk/
-          cp mindful_flutter/build/app/outputs/flutter-apk/*.apk build/app/outputs/flutter-apk/ || true
+          echo "=== Debug APK ===" 
+          ls -lh mindful_flutter/build/app/outputs/flutter-apk/ 2>/dev/null || echo "No debug APK found"
+          echo "=== Release APK ===" 
+          ls -lh mindful_flutter/build/app/outputs/apk/release/ 2>/dev/null || echo "No release APK found"
 
       - name: Generate release notes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          echo "# Neubofy Productive Release" > RELEASE_NOTES.md
-          echo "## Version ${{ github.run_id }}" >> RELEASE_NOTES.md
-          echo "**Build Date**: $(date +'%Y-%m-%d %H:%M:%S')" >> RELEASE_NOTES.md
-          echo "**Commit**: ${{ github.sha }}" >> RELEASE_NOTES.md
+          echo "# Neubofy Productive v${{ github.run_number }}" > RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
-          echo "### Build Information" >> RELEASE_NOTES.md
-          echo "- Branch: ${{ github.ref_name }}" >> RELEASE_NOTES.md
-          echo "- Actor: ${{ github.actor }}" >> RELEASE_NOTES.md
-          echo "- Run ID: ${{ github.run_id }}" >> RELEASE_NOTES.md
-          echo "- Run ID: ${{ github.run_id }}" >> RELEASE_NOTES.md
+          echo "**Build Date**: $(date +'%Y-%m-%d %H:%M:%S UTC')" >> RELEASE_NOTES.md
+          echo "**Commit**: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})" >> RELEASE_NOTES.md
+          echo "**Branch**: ${{ github.ref_name }}" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "## Build Details" >> RELEASE_NOTES.md
+          echo "- Build ID: ${{ github.run_id }}" >> RELEASE_NOTES.md
+          echo "- Run Number: ${{ github.run_number }}" >> RELEASE_NOTES.md
+          echo "- Triggered by: ${{ github.actor }}" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "## Installation" >> RELEASE_NOTES.md
+          echo "\`\`\`bash" >> RELEASE_NOTES.md
+          echo "adb install app-release.apk" >> RELEASE_NOTES.md
+          echo "\`\`\`" >> RELEASE_NOTES.md
 
-      - name: Upload APK to artifacts
+      - name: Upload Debug APK to artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: neubofy-productive-apk
-          path: mindful_flutter/build/app/outputs/flutter-apk/*.apk
-          retention-days: 30
+          name: neubofy-productive-debug-apk
+          path: mindful_flutter/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 15
+          if-no-files-found: ignore
 
-      - name: Create Release (on main branch push)
+      - name: Upload Release APK to artifacts
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: neubofy-productive-release-apk
+          path: mindful_flutter/build/app/outputs/apk/release/app-release.apk
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
         uses: softprops/action-gh-release@v1
         with:
-          files: mindful_flutter/build/app/outputs/flutter-apk/app-release.apk
+          files: mindful_flutter/build/app/outputs/apk/release/app-release.apk
           tag_name: v${{ github.run_number }}
           name: Neubofy Productive v${{ github.run_number }}
-          body: |
-            ## Release Build v${{ github.run_number }}
-            
-            **Build Information:**
-            - Commit: ${{ github.sha }}
-            - Branch: ${{ github.ref_name }}
-            
-            **Download:** app-release.apk
-            
-            **Installation:**
-            ```bash
-            adb install app-release.apk
-            ```
+          body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
+      - name: Comment success on PR
+        if: github.event_name == 'pull_request' && success()
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '✅ APK built successfully! Download from [Actions artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+              body: '✅ **Build Successful!**\n\nDebug APK is ready for download from [Actions artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n**Platform**: Android\n**Build Type**: Debug\n**Flutter**: ${{ env.FLUTTER_VERSION }}'
             })
 
-      - name: Notify on failure
-        if: failure() && github.event_name == 'pull_request'
+      - name: Comment failure on PR
+        if: github.event_name == 'pull_request' && failure()
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '❌ APK build failed. Check [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+              body: '❌ **Build Failed!**\n\nPlease check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n\n**Error Details**: See build output above'
             })
+
+      - name: Notify build status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Build completed successfully!"
+            echo "📦 APK ready for deployment"
+          else
+            echo "❌ Build failed!"
+            echo "Check logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
