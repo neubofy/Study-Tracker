@@ -27,7 +27,7 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
     namespace "com.neubofy.appblocker"
-    compileSdkVersion 34
+    compileSdkVersion 33
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
@@ -45,10 +45,9 @@ android {
     defaultConfig {
         applicationId "com.neubofy.appblocker"
         minSdkVersion 21
-        targetSdkVersion 34
+        targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        multiDexEnabled true
     }
 
     buildTypes {
@@ -65,7 +64,7 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10"
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core:1.10.1'
 }
