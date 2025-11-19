@@ -1,0 +1,29 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.iml
+*.lock
+pubspec.lock
+build/
+
+# Android
+.gradle/
+local.properties
+*.apk
+*.aar
+
+# iOS
+ios/Flutter/Flutter.podspec
+
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Web
+lib/generated_plugin_registrant.dart
+
+# Miscellaneous
+.DS_Store
+.env
+*.log

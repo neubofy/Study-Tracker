@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,230 +11,269 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Neubofy Productive',
+      title: 'App Blocker',
       theme: ThemeData(
+        primarySwatch: Colors.blue,
         useMaterial3: true,
-        brightness: Brightness.light,
-        colorSchemeSeed: Colors.blue,
       ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: Colors.blue,
-      ),
-      themeMode: ThemeMode.system,
       home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<BlockedApp> blockedApps = [];
+  final List<CalendarEvent> calendarEvents = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Neubofy Productive'),
+        title: const Text('App Blocker'),
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // App Blocking Card
-              _buildFeatureCard(
-                context,
-                icon: Icons.apps_outage,
-                title: 'App Blocking',
-                description: 'Block distracting apps during focus time',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AppBlockingScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              
-              // Calendar Integration Card
-              _buildFeatureCard(
-                context,
-                icon: Icons.calendar_today,
-                title: 'Calendar Integration',
-                description: 'Auto-block apps during calendar events',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              
-              // Settings Card
-              _buildFeatureCard(
-                context,
-                icon: Icons.settings,
-                title: 'Settings',
-                description: 'Configure app preferences',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String description,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon, size: 32, color: Colors.blue),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text(description),
-        trailing: const Icon(Icons.arrow_forward),
-        onTap: onTap,
-      ),
-    );
-  }
-}
-
-// App Blocking Screen
-class AppBlockingScreen extends StatefulWidget {
-  const AppBlockingScreen({Key? key}) : super(key: key);
-
-  @override
-  State<AppBlockingScreen> createState() => _AppBlockingScreenState();
-}
-
-class _AppBlockingScreenState extends State<AppBlockingScreen> {
-  final List<String> blockedApps = [];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Block Apps')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text('Add App to Block'),
-              onPressed: () {
-                // Show available apps to block
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Feature coming soon')),
-                );
-              },
-            ),
-          ),
-          Expanded(
-            child: blockedApps.isEmpty
-                ? const Center(child: Text('No apps blocked'))
-                : ListView.builder(
-                    itemCount: blockedApps.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(blockedApps[index]),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.remove_circle),
-                          onPressed: () {
-                            setState(() => blockedApps.removeAt(index));
-                          },
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Calendar Integration Screen
-class CalendarScreen extends StatelessWidget {
-  const CalendarScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Calendar Integration')),
-      body: Center(
+      body: DefaultTabController(
+        length: 2,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.login),
-              label: const Text('Connect Google Calendar'),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Google Sign-In coming soon')),
-                );
-              },
+            TabBar(
+              tabs: const [
+                Tab(icon: Icon(Icons.block), text: 'Blocked Apps'),
+                Tab(icon: Icon(Icons.calendar_today), text: 'Calendar'),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Connect your Google Calendar to automatically\nblock apps during scheduled events',
-              textAlign: TextAlign.center,
+            Expanded(
+              child: TabBarView(
+                children: [
+                  // Blocked Apps Tab
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add App to Block'),
+                          onPressed: _addBlockedApp,
+                        ),
+                      ),
+                      Expanded(
+                        child: blockedApps.isEmpty
+                            ? const Center(
+                                child: Text('No apps blocked yet'),
+                              )
+                            : ListView.builder(
+                                itemCount: blockedApps.length,
+                                itemBuilder: (context, index) {
+                                  final app = blockedApps[index];
+                                  return ListTile(
+                                    leading: const Icon(Icons.apps),
+                                    title: Text(app.name),
+                                    subtitle: Text(
+                                      'Block from ${app.startTime} to ${app.endTime}',
+                                    ),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () {
+                                        setState(() {
+                                          blockedApps.removeAt(index);
+                                        });
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                  // Calendar Tab
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.login),
+                          label: const Text('Connect Google Calendar'),
+                          onPressed: _connectCalendar,
+                        ),
+                      ),
+                      Expanded(
+                        child: calendarEvents.isEmpty
+                            ? const Center(
+                                child: Text('No calendar events synced'),
+                              )
+                            : ListView.builder(
+                                itemCount: calendarEvents.length,
+                                itemBuilder: (context, index) {
+                                  final event = calendarEvents[index];
+                                  return ListTile(
+                                    leading: const Icon(Icons.event),
+                                    title: Text(event.title),
+                                    subtitle: Text(
+                                      '${event.startTime} - ${event.endTime}',
+                                    ),
+                                    trailing: Checkbox(
+                                      value: event.blockApps,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          event.blockApps = value ?? false;
+                                        });
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-// Settings Screen
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        children: [
-          ListTile(
-            title: const Text('App Version'),
-            subtitle: const Text('1.0.0'),
-          ),
-          ListTile(
-            title: const Text('About'),
-            subtitle: const Text('Simple Focus App'),
-            onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'Neubofy Productive',
-                applicationVersion: '1.0.0',
-                applicationLegalese: '© 2025 Neubofy',
-              );
-            },
-          ),
-        ],
+  void _addBlockedApp() {
+    showDialog(
+      context: context,
+      builder: (context) => _AddAppDialog(
+        onAdd: (app) {
+          setState(() {
+            blockedApps.add(app);
+          });
+        },
       ),
     );
   }
+
+  void _connectCalendar() {
+    // TODO: Implement Google Calendar OAuth
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Google Calendar integration coming soon'),
+      ),
+    );
+  }
+}
+
+class _AddAppDialog extends StatefulWidget {
+  final Function(BlockedApp) onAdd;
+
+  const _AddAppDialog({required this.onAdd});
+
+  @override
+  State<_AddAppDialog> createState() => _AddAppDialogState();
+}
+
+class _AddAppDialogState extends State<_AddAppDialog> {
+  late TextEditingController nameController;
+  late TextEditingController startTimeController;
+  late TextEditingController endTimeController;
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController();
+    startTimeController = TextEditingController(text: '09:00');
+    endTimeController = TextEditingController(text: '17:00');
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    startTimeController.dispose();
+    endTimeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add App to Block'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'App Name',
+              hintText: 'e.g., Instagram',
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: startTimeController,
+            decoration: const InputDecoration(
+              labelText: 'Start Time',
+              hintText: 'HH:MM',
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: endTimeController,
+            decoration: const InputDecoration(
+              labelText: 'End Time',
+              hintText: 'HH:MM',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (nameController.text.isNotEmpty) {
+              widget.onAdd(
+                BlockedApp(
+                  name: nameController.text,
+                  startTime: startTimeController.text,
+                  endTime: endTimeController.text,
+                ),
+              );
+              Navigator.pop(context);
+            }
+          },
+          child: const Text('Add'),
+        ),
+      ],
+    );
+  }
+}
+
+class BlockedApp {
+  final String name;
+  final String startTime;
+  final String endTime;
+
+  BlockedApp({
+    required this.name,
+    required this.startTime,
+    required this.endTime,
+  });
+}
+
+class CalendarEvent {
+  final String title;
+  final String startTime;
+  final String endTime;
+  bool blockApps;
+
+  CalendarEvent({
+    required this.title,
+    required this.startTime,
+    required this.endTime,
+    this.blockApps = false,
+  });
 }
