@@ -24,9 +24,15 @@ if (new File(flutterEnginePluginPath).exists()) {
 def localPropertiesFile = new File(rootProject.projectDir.parentFile, "local.properties")
 def properties = new Properties()
 
-localPropertiesFile.withReader('UTF-8') { reader -> properties.load(reader) }
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader -> properties.load(reader) }
+}
 
 def flutterSdkPath = properties.getProperty("flutter.sdk")
-assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+if (flutterSdkPath == null) {
+    flutterSdkPath = System.getenv("FLUTTER_HOME") ?: System.getenv("FLUTTER_SDK")
+}
 
-apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+if (flutterSdkPath != null && new File("$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle").exists()) {
+    apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+}
