@@ -8,7 +8,7 @@ if (localPropertiesFile.exists()) {
 
 def flutterRoot = localProperties.getProperty('flutter.sdk')
 if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found.")
+    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
 }
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
@@ -18,7 +18,7 @@ if (flutterVersionCode == null) {
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '1.0.0'
+    flutterVersionName = '1.0'
 }
 
 apply plugin: 'com.android.application'
@@ -28,16 +28,16 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 android {
     namespace "com.neubofy.appblocker"
     compileSdkVersion 34
-    
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
-    
+
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
     }
-    
+
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
@@ -48,13 +48,14 @@ android {
         targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
     }
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.debug
         }
     }
 }
@@ -64,6 +65,7 @@ flutter {
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0"
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.core:core:1.10.0'
+    implementation 'androidx.core:core:1.10.1'
 }

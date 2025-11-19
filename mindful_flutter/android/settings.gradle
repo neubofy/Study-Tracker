@@ -14,25 +14,16 @@ plugins {
 include ":app"
 
 def flutterProjectRoot = rootProject.projectDir.parentFile.parentFile
-def flutterRoot = flutterProjectRoot.absolutePath
-
-def flutterEnginePluginPath = "$flutterRoot/packages/flutter_tools/gradle"
-if (new File(flutterEnginePluginPath).exists()) {
-    includeBuild flutterEnginePluginPath
+def plugins = new Properties()
+def pluginsFile = new File(flutterProjectRoot, '.flutter-plugins')
+if (pluginsFile.exists()) {
+    pluginsFile.withReader('UTF-8') { reader -> plugins.load(reader) }
 }
 
-def localPropertiesFile = new File(rootProject.projectDir.parentFile, "local.properties")
-def properties = new Properties()
-
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader -> properties.load(reader) }
-}
-
-def flutterSdkPath = properties.getProperty("flutter.sdk")
-if (flutterSdkPath == null) {
-    flutterSdkPath = System.getenv("FLUTTER_HOME") ?: System.getenv("FLUTTER_SDK")
-}
-
-if (flutterSdkPath != null && new File("$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle").exists()) {
-    apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+plugins.each { name, path ->
+    def pluginDirectory = new File(path, 'android')
+    if (pluginDirectory.exists()) {
+        include ":$name"
+        project(":$name").projectDir = pluginDirectory
+    }
 }

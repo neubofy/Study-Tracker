@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Copyright 2015 the original author or authors.
+# This software is governed by the CeCILL-C license under French law and
+# abiding by the rules of distribution of free software. You can use,
+# modify and/or redistribute the software under the terms of the CeCILL-C
+# license as circulated by the INRIA newsroom or shared in the following link.
+# More information and the full text of this license is available at
+# http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+set -e
+SCRIPT="$0"
+while [ -h "$SCRIPT" ] ; do
+    ls=`ls -ld "$SCRIPT"`
+    link=`expr "$ls" : '.*-> \(.*\)$'`
+    if expr "$link" : '/.*' > /dev/null; then
+        SCRIPT="$link"
+    else
+        SCRIPT=`dirname "$SCRIPT"`"/$link"
+    fi
+done
+saveddir=`pwd`
+SCRIPT_DIR=`dirname "$SCRIPT"`/.
+[ -n "$SCRIPT_DIR" ] && SCRIPT_DIR=`cd "$SCRIPT_DIR" > /dev/null && pwd`
+if [ ! -d "$APP_HOME" ] ; then
+    APP_HOME=`dirname "$SCRIPT_DIR"`
+fi
+APP_HOME=`cd "$APP_HOME" > /dev/null && pwd`
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+JAVACMD="$JAVA_HOME/bin/java"
+[ -z "$JAVACMD" ] && JAVACMD=java
+[ -z "$JAVA_HOME" ] && warn "JAVA_HOME environment variable is not set."
+exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
