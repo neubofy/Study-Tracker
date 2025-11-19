@@ -48,11 +48,20 @@ android {
         targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        
+        // Flutter embedding v2 requirement
+        manifestPlaceholders = [
+            'flutter_embedding_version': 2,
+        ]
     }
 
     buildTypes {
+        debug {
+            debuggable true
+        }
+        
         release {
-            signingConfig signingConfigs.debug
+            debuggable false
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -69,12 +78,10 @@ dependencies {
     
     // AndroidX & Material
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core:1.10.1'
     implementation 'com.google.android.material:material:1.11.0'
     
     // WorkManager for background tasks
     implementation 'androidx.work:work-runtime:2.9.0'
     implementation 'androidx.work:work-runtime-ktx:2.9.0'
-    
-    // VPN Service (if needed for local VPN)
-    // No additional dependencies required, uses Android framework
 }
