@@ -39,21 +39,9 @@ jobs:
 
       - name: Get Flutter dependencies
         working-directory: ./mindful_flutter
-        run: |
-          flutter pub get
-          flutter pub upgrade --dry-run
+        run: flutter pub get
 
-      - name: Analyze code
-        working-directory: ./mindful_flutter
-        continue-on-error: true
-        run: flutter analyze
-
-      - name: Format check
-        working-directory: ./mindful_flutter
-        continue-on-error: true
-        run: dart format --set-exit-if-changed .
-
-      - name: Build APK (Debug for testing)
+      - name: Build APK (Debug)
         working-directory: ./mindful_flutter
         run: flutter build apk --debug
 
@@ -73,36 +61,36 @@ jobs:
       - name: Generate release notes
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          echo "# Neubofy Productive v${{ github.run_number }}" > RELEASE_NOTES.md
+          echo "# App Blocker v${{ github.run_number }}" > RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
           echo "**Build Date**: $(date +'%Y-%m-%d %H:%M:%S UTC')" >> RELEASE_NOTES.md
           echo "**Commit**: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})" >> RELEASE_NOTES.md
           echo "**Branch**: ${{ github.ref_name }}" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
-          echo "## Build Details" >> RELEASE_NOTES.md
-          echo "- Build ID: ${{ github.run_id }}" >> RELEASE_NOTES.md
-          echo "- Run Number: ${{ github.run_number }}" >> RELEASE_NOTES.md
-          echo "- Triggered by: ${{ github.actor }}" >> RELEASE_NOTES.md
+          echo "## Features" >> RELEASE_NOTES.md
+          echo "- Block apps on schedule" >> RELEASE_NOTES.md
+          echo "- Google Calendar integration" >> RELEASE_NOTES.md
+          echo "- Simple and clean UI" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
           echo "## Installation" >> RELEASE_NOTES.md
           echo "\`\`\`bash" >> RELEASE_NOTES.md
           echo "adb install app-release.apk" >> RELEASE_NOTES.md
           echo "\`\`\`" >> RELEASE_NOTES.md
 
-      - name: Upload Debug APK to artifacts
+      - name: Upload Debug APK
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: neubofy-productive-debug-apk
+          name: app-blocker-debug-apk
           path: mindful_flutter/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 15
           if-no-files-found: ignore
 
-      - name: Upload Release APK to artifacts
+      - name: Upload Release APK
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
-          name: neubofy-productive-release-apk
+          name: app-blocker-release-apk
           path: mindful_flutter/build/app/outputs/apk/release/app-release.apk
           retention-days: 90
           if-no-files-found: ignore
@@ -113,39 +101,13 @@ jobs:
         with:
           files: mindful_flutter/build/app/outputs/apk/release/app-release.apk
           tag_name: v${{ github.run_number }}
-          name: Neubofy Productive v${{ github.run_number }}
+          name: App Blocker v${{ github.run_number }}
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Comment success on PR
-        if: github.event_name == 'pull_request' && success()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '✅ **Build Successful!**\n\nDebug APK is ready for download from [Actions artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n**Platform**: Android\n**Build Type**: Debug\n**Flutter**: ${{ env.FLUTTER_VERSION }}'
-            })
-
-      - name: Comment failure on PR
-        if: github.event_name == 'pull_request' && failure()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '❌ **Build Failed!**\n\nPlease check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n\n**Error Details**: See build output above'
-            })
 
       - name: Notify build status
         if: always()
