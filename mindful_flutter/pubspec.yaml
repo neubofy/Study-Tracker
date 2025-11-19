@@ -12,11 +12,6 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # Google Calendar API
-  googleapis: ^11.0.0
-  google_sign_in: ^6.1.0
-  googleapis_auth: ^1.4.0
-  
   # UI & Navigation
   cupertino_icons: ^1.0.0
   intl: ^0.18.0

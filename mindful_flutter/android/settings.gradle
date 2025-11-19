@@ -14,16 +14,19 @@ plugins {
 include ":app"
 
 def flutterProjectRoot = rootProject.projectDir.parentFile.parentFile
-def plugins = new Properties()
-def pluginsFile = new File(flutterProjectRoot, '.flutter-plugins')
-if (pluginsFile.exists()) {
-    pluginsFile.withReader('UTF-8') { reader -> plugins.load(reader) }
-}
+def flutterPluginsFile = new File(flutterProjectRoot, '.flutter-plugins')
+def flutterPluginsListFile = new File(flutterProjectRoot, '.flutter-plugins-dependencies')
 
-plugins.each { name, path ->
-    def pluginDirectory = new File(path, 'android')
-    if (pluginDirectory.exists()) {
-        include ":$name"
-        project(":$name").projectDir = pluginDirectory
+if (flutterPluginsFile.exists()) {
+    flutterPluginsFile.eachLine { line ->
+        if (!line.startsWith('#') && line.contains('=')) {
+            def pluginName = line.substring(0, line.indexOf('='))
+            def pluginPath = line.substring(line.indexOf('=') + 1)
+            def pluginDir = new File(pluginPath, 'android')
+            if (pluginDir.exists()) {
+                include ":$pluginName"
+                project(":$pluginName").projectDir = pluginDir
+            }
+        }
     }
 }
